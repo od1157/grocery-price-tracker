@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grocery Price Tracker PWA</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <!-- Theme color for browser UI -->
+    <meta name="theme-color" content="#3B82F6">
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="/icon-192x192.png">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Light gray background */
+            color: #1e293b; /* Dark text */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for better scrolling */
+            min-height: 100vh;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 2.5rem;
+            border-radius: 1.5rem; /* More rounded corners */
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 768px; /* Max width for readability */
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        h1 {
+            color: #1a202c; /* Darker heading */
+            font-size: 2.8rem; /* Larger heading */
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .input-group label {
+            font-weight: 600;
+            color: #475569;
+        }
+        .input-group input[type="text"],
+        .input-group input[type="number"],
+        .input-group select { /* Added select to styling */
+            padding: 0.8rem 1rem;
+            border: 1px solid #cbd5e1; /* Light border */
+            border-radius: 0.75rem; /* Rounded input fields */
+            font-size: 1rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .input-group input[type="text"]:focus,
+        .input-group input[type="number"]:focus,
+        .input-group select:focus { /* Added select to focus styling */
+            outline: none;
+            border-color: #3B82F6; /* Blue focus border */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); /* Blue shadow on focus */
+        }
+        .btn-primary {
+            background-color: #3B82F6; /* Blue button */
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.2);
+            width: 100%;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb; /* Darker blue on hover */
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+        }
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.2);
+        }
+        .install-button {
+            background-color: #10B981; /* Green install button */
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-top: 1.5rem;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.2);
+            width: 100%;
+        }
+        .install-button:hover {
+            background-color: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+        }
+        .install-button:active {
+            transform: translateY(0);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.2);
+        }
+        .product-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .product-item {
+            background-color: #f1f5f9; /* Lighter background for items */
+            padding: 1.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .product-item h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .product-item p {
+            font-size: 0.95rem;
+            color: #475569;
+        }
+        .price-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.5rem 1rem;
+            margin-top: 0.5rem;
+            align-items: center;
+        }
+        .price-info-grid > div {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .price-info-grid span {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #ef4444;
+        }
+        .price-info-grid .label {
+            font-size: 0.8rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+        .price-info-grid .value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        .price-info-grid .current-price-value {
+            color: #ef4444;
+            font-size: 1.2rem;
+        }
+        .price-info-grid .avg-price-value {
+            color: #059669;
+        }
+        .price-info-grid .high-price-value {
+            color: #dc2626;
+        }
+        .price-info-grid .low-price-value {
+            color: #2563eb;
+        }
+
+        .btn-secondary {
+            background-color: #e2e8f0;
+            color: #1e293b;
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 0.6rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+        .btn-secondary:hover {
+            background-color: #cbd5e1;
+            transform: translateY(-1px);
+        }
+        .btn-secondary:active {
+            transform: translateY(0);
+        }
+        .delete-btn {
+            background-color: #ef4444;
+            color: white;
+        }
+        .delete-btn:hover {
+            background-color: #dc2626;
+        }
+
+        /* Responsive adjustments */
+        @media (min-width: 640px) {
+            .input-grid {
+                display: grid;
+                grid-template-columns: 1fr 0.5fr 1fr; /* Three columns: Name, Unit, Price */
+                gap: 1.5rem;
+            }
+            .btn-primary {
+                grid-column: span 3; /* Button spans all three columns */
+            }
+            .product-item {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .product-details {
+                flex-grow: 1;
+            }
+            .price-actions {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 0.5rem;
+                min-width: 150px;
+            }
+            .price-info-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.75rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛍️ Grocery Price Tracker</h1>
+
+        <div class="add-product-section bg-gray-50 p-6 rounded-xl shadow-inner">
+            <h2 class="text-2xl font-semibold text-center mb-4 text-gray-700">Add New Product</h2>
+            <div class="input-grid">
+                <div class="input-group">
+                    <label for="productName">Product Name:</label>
+                    <input type="text" id="productName" placeholder="e.g., Milk" class="focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="input-group">
+                    <label for="productUnit">Unit (Optional):</label>
+                    <select id="productUnit" class="focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">-- Select Unit --</option>
+                        <option value="ea">Each</option>
+                        <option value="lb">lb</option>
+                        <option value="oz">oz</option>
+                        <option value="g">g</option>
+                        <option value="kg">kg</option>
+                        <option value="fl oz">fl oz</option>
+                        <option value="ml">ml</option>
+                        <option value="liter">Liter</option>
+                        <option value="gallon">Gallon</option>
+                        <option value="pack">Pack</option>
+                        <option value="dozen">Dozen</option>
+                        <option value="box">Box</option>
+                        <option value="bag">Bag</option>
+                        <option value="bottle">Bottle</option>
+                        <option value="can">Can</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="initialPrice">Current Price:</label>
+                    <input type="number" id="initialPrice" step="0.01" min="0" placeholder="e.g., 3.99" class="focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <button id="addProductBtn" class="btn-primary">Add Product</button>
+            </div>
+        </div>
+
+        <div class="tracked-products-section">
+            <h2 class="text-2xl font-semibold text-center mb-4 text-gray-700">Tracked Products</h2>
+            <div id="productList" class="product-list">
+                <!-- Product items will be dynamically added here -->
+                <p id="noProductsMessage" class="text-center text-gray-500 italic">No products tracked yet. Add one above!</p>
+            </div>
+        </div>
+
+        <button id="installButton" class="install-button hidden">Install App</button>
+    </div>
+
+    <script>
+        // DOM Elements
+        const productNameInput = document.getElementById('productName');
+        const productUnitInput = document.getElementById('productUnit'); // Now a select element
+        const initialPriceInput = document.getElementById('initialPrice');
+        const addProductBtn = document.getElementById('addProductBtn');
+        const productListDiv = document.getElementById('productList');
+        const noProductsMessage = document.getElementById('noProductsMessage');
+        const installButton = document.getElementById('installButton');
+
+        let deferredPrompt; // For PWA install prompt
+
+        // --- PWA Service Worker Registration ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // Changed the service worker registration path to be an absolute path from root
+                // This typically resolves issues with blob: URLs or varying base paths in certain environments.
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker registered:', registration);
+                    })
+                    .catch(error => {
+                        console.error('Service Worker registration failed:', error);
+                    });
+            });
+        }
+
+        // --- PWA Install Prompt Logic ---
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installButton.classList.remove('hidden'); // Show install button
+        });
+
+        installButton.addEventListener('click', () => {
+            installButton.classList.add('hidden'); // Hide install button
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the A2HS prompt');
+                    } else {
+                        console.log('User dismissed the A2HS prompt');
+                    }
+                    deferredPrompt = null;
+                });
+            }
+        });
+
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA was installed!');
+            installButton.classList.add('hidden'); // Hide if already installed
+        });
+
+        // --- Product Tracking Logic ---
+
+        // Load products from localStorage
+        let products = JSON.parse(localStorage.getItem('trackedProducts')) || [];
+
+        // Function to calculate and update price statistics for a product
+        function updateProductStatistics(product) {
+            if (product.priceHistory && product.priceHistory.length > 0) {
+                const prices = product.priceHistory.map(entry => entry.price);
+                product.currentPrice = prices[prices.length - 1]; // Latest price
+                product.averagePrice = prices.reduce((sum, p) => sum + p, 0) / prices.length;
+                product.highestPrice = Math.max(...prices);
+                product.lowestPrice = Math.min(...prices);
+            } else {
+                product.currentPrice = null;
+                product.averagePrice = null;
+                product.highestPrice = null;
+                product.lowestPrice = null;
+            }
+        }
+
+        // Function to render products
+        function renderProducts() {
+            productListDiv.innerHTML = ''; // Clear existing list
+            if (products.length === 0) {
+                noProductsMessage.classList.remove('hidden');
+                productListDiv.appendChild(noProductsMessage);
+                return;
+            } else {
+                noProductsMessage.classList.add('hidden');
+            }
+
+            // Sort products alphabetically by name
+            const sortedProducts = [...products].sort((a, b) => a.name.localeCompare(b.name));
+
+            sortedProducts.forEach((product, index) => {
+                // Ensure statistics are up-to-date before rendering
+                updateProductStatistics(product);
+
+                const productItem = document.createElement('div');
+                productItem.className = 'product-item';
+                productItem.innerHTML = `
+                    <div class="product-details">
+                        <h3>${product.name} ${product.unit ? `<span class="text-gray-500 text-sm font-normal">(${product.unit})</span>` : ''}</h3>
+                    </div>
+                    <div class="price-actions">
+                        <div class="price-info-grid">
+                            <div>
+                                <span class="label">Current Price:</span>
+                                <span class="value current-price-value">$${product.currentPrice ? product.currentPrice.toFixed(2) : 'N/A'}</span>
+                            </div>
+                            <div>
+                                <span class="label">Average Price:</span>
+                                <span class="value avg-price-value">$${product.averagePrice ? product.averagePrice.toFixed(2) : 'N/A'}</span>
+                            </div>
+                            <div>
+                                <span class="label">Highest Price:</span>
+                                <span class="value high-price-value">$${product.highestPrice ? product.highestPrice.toFixed(2) : 'N/A'}</span>
+                            </div>
+                            <div>
+                                <span class="label">Lowest Price:</span>
+                                <span class="value low-price-value">$${product.lowestPrice ? product.lowestPrice.toFixed(2) : 'N/A'}</span>
+                            </div>
+                        </div>
+                        <small class="text-gray-500 mt-2">Last Updated: ${product.priceHistory.length > 0 ? new Date(product.priceHistory[product.priceHistory.length - 1].timestamp).toLocaleString() : 'Never'}</small>
+                        <button class="btn-secondary check-price-btn mt-2" data-product-id="${product.id}">Update Price</button>
+                        <button class="btn-secondary delete-product-btn delete-btn" data-product-id="${product.id}">Delete</button>
+                    </div>
+                `;
+                productListDiv.appendChild(productItem);
+            });
+
+            // Attach event listeners to new buttons using product ID for reliable lookup
+            document.querySelectorAll('.check-price-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const productId = parseInt(event.target.dataset.productId);
+                    const productIndex = products.findIndex(p => p.id === productId);
+                    if (productIndex > -1) {
+                        promptForNewPrice(productIndex);
+                    }
+                });
+            });
+
+            document.querySelectorAll('.delete-product-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const productId = parseInt(event.target.dataset.productId);
+                    const productIndex = products.findIndex(p => p.id === productId);
+                    if (productIndex > -1) {
+                        deleteProduct(productIndex);
+                    }
+                });
+            });
+        }
+
+        // Prompt user for a new price and add it to history
+        function promptForNewPrice(index) {
+            const product = products[index];
+            if (!product) return;
+
+            // IMPORTANT: In a real PWA, replace this with a custom modal UI for better UX
+            // and to avoid browser alert/prompt limitations in some contexts.
+            const newPriceStr = prompt(`Enter new price for ${product.name} (Current: $${product.currentPrice ? product.currentPrice.toFixed(2) : 'N/A'}):`);
+
+            if (newPriceStr !== null) { // User didn't cancel
+                const newPrice = parseFloat(newPriceStr);
+                if (!isNaN(newPrice) && newPrice >= 0) {
+                    product.priceHistory.push({
+                        price: newPrice,
+                        timestamp: new Date().toISOString()
+                    });
+                    saveProducts();
+                    renderProducts();
+                    console.log(`Price for ${product.name} updated to $${newPrice.toFixed(2)}`);
+                } else {
+                    console.warn('Invalid price entered. Please enter a valid number.');
+                }
+            }
+        }
+
+        // Add a new product or update existing one
+        addProductBtn.addEventListener('click', () => {
+            const name = productNameInput.value.trim();
+            const unit = productUnitInput.value; // Get the selected unit value
+            const initialPriceStr = initialPriceInput.value.trim();
+
+            if (!name) {
+                console.warn('Please enter a product name.');
+                return;
+            }
+
+            let initialPrice = null;
+            if (initialPriceStr) {
+                initialPrice = parseFloat(initialPriceStr);
+                if (isNaN(initialPrice) || initialPrice < 0) {
+                    console.warn('Invalid initial price entered. Please enter a valid number.');
+                    return;
+                }
+            }
+
+            // Check if product with this name already exists
+            const existingProduct = products.find(p => p.name.toLowerCase() === name.toLowerCase());
+
+            if (existingProduct) {
+                // Product exists, update its price history and unit (if provided)
+                if (initialPrice !== null) {
+                    existingProduct.priceHistory.push({
+                        price: initialPrice,
+                        timestamp: new Date().toISOString()
+                    });
+                }
+                if (unit) { // Update unit only if a value is selected
+                    existingProduct.unit = unit;
+                }
+                console.log(`Updated price history for existing product: ${name}`);
+            } else {
+                // Product does not exist, create a new one
+                const newProduct = {
+                    id: Date.now(), // Unique ID
+                    name: name,
+                    unit: unit, // Store the selected unit
+                    priceHistory: [], // Array to store all price entries
+                    currentPrice: null,
+                    averagePrice: null,
+                    highestPrice: null,
+                    lowestPrice: null
+                };
+
+                if (initialPrice !== null) {
+                    newProduct.priceHistory.push({
+                        price: initialPrice,
+                        timestamp: new Date().toISOString()
+                    });
+                }
+                products.push(newProduct);
+                console.log(`Added new product: ${name}`);
+            }
+
+            saveProducts();
+            renderProducts(); // Rerender to show updated/new product and stats
+            productNameInput.value = '';
+            productUnitInput.value = ''; // Reset select to default option
+            initialPriceInput.value = '';
+        });
+
+        // Delete a product
+        function deleteProduct(index) {
+            products.splice(index, 1);
+            saveProducts();
+            renderProducts();
+        }
+
+        // Save products to localStorage
+        function saveProducts() {
+            localStorage.setItem('trackedProducts', JSON.stringify(products));
+        }
+
+        // Initial render on load
+        renderProducts();
+
+        // Add event listener for 'Enter' key on initialPrice input
+        initialPriceInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent default form submission if any
+                addProductBtn.click(); // Simulate a click on the Add Product button
+            }
+        });
+    </script>
