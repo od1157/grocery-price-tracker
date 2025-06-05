@@ -1,11 +1,11 @@
 {
-    "name": "Grocery Price Tracker PWA",
-    "short_name": "GroceryTracker",
-    "description": "Track grocery prices and manage your budget.",
+    "name": "My First PWA",
+    "short_name": "MyPWA",
+    "description": "A simple Progressive Web App example.",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#f8fafc",
-    "theme_color": "#3B82F6",
+    "background_color": "#ffffff",
+    "theme_color": "#4CAF50",
     "icons": [
         {
             "src": "/icon-192x192.png",
