@@ -1,14 +1,11 @@
-const CACHE_NAME = 'price-tracker-cache-v1';
+const CACHE_NAME = 'my-pwa-cache-v1';
 const urlsToCache = [
     '/',
     '/index.html',
     '/manifest.json',
-    // Placeholder icons - in a real app, you'd have actual image files
-    '/icon-192x192.png',
-    '/icon-512x512.png',
-    'https://cdn.tailwindcss.com', // Cache Tailwind CSS
-    'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap', // Cache Inter font CSS
-    // Note: Fonts themselves (woff2, etc.) are usually fetched by the browser based on the CSS
+    // You would typically include your icon files here as well,
+    // e.g., '/icon-192x192.png', '/icon-512x512.png'
+    // For this example, we'll assume they are handled by the browser cache
 ];
 
 // Install event: Caches static assets
@@ -16,16 +13,13 @@ self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then((cache) => {
-                console.log('Service Worker: Opened cache');
+                console.log('Opened cache');
                 return cache.addAll(urlsToCache);
-            })
-            .catch(error => {
-                console.error('Service Worker: Failed to cache during install:', error);
             })
     );
 });
 
-// Fetch event: Serves cached content or fetches from network
+// Fetch event: Serves cached content when offline
 self.addEventListener('fetch', (event) => {
     event.respondWith(
         caches.match(event.request)
@@ -35,13 +29,7 @@ self.addEventListener('fetch', (event) => {
                     return response;
                 }
                 // No cache hit - fetch from network
-                return fetch(event.request).catch(() => {
-                    // Fallback for offline if fetch fails (e.g., for navigation requests)
-                    // You could serve an offline page here if desired
-                    console.warn('Service Worker: Fetch failed, and no cache found for:', event.request.url);
-                    // For now, just return an empty response or throw
-                    return new Response(null, { status: 503, statusText: 'Service Unavailable' });
-                });
+                return fetch(event.request);
             })
     );
 });
@@ -54,7 +42,7 @@ self.addEventListener('activate', (event) => {
             return Promise.all(
                 cacheNames.map((cacheName) => {
                     if (cacheWhitelist.indexOf(cacheName) === -1) {
-                        console.log('Service Worker: Deleting old cache:', cacheName);
+                        // Delete old caches
                         return caches.delete(cacheName);
                     }
                 })
