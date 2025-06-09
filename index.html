@@ -49,6 +49,7 @@
             display: flex;
             flex-direction: column;
             gap: 1rem;
+            position: relative; /* Needed for absolute positioning of autocomplete suggestions */
         }
         .input-group label {
             font-weight: 600;
@@ -331,7 +332,8 @@
             background-color: #aebacd;
             transform: translateY(-2px);
         }
-        .update-price-modal-content input[type="number"] {
+        .update-price-modal-content input[type="number"],
+        .update-price-modal-content input[type="text"] { /* Added text type for store input */
             margin-top: 1rem;
             padding: 0.8rem 1rem;
             border: 1px solid #cbd5e1;
@@ -342,6 +344,53 @@
             max-width: 200px;
             box-sizing: border-box;
         }
+        /* Style for store name in product heading */
+        .product-item h3 .product-store {
+            font-size: 1rem; /* Slightly smaller than product name */
+            font-weight: 500;
+            color: #64748b; /* Lighter color */
+            margin-left: 0.5rem; /* Space between product name and store */
+        }
+        /* Style for store name next to current price */
+        .price-info-grid .current-price-value .store-display {
+            font-size: 0.75rem; /* Smaller font for store name */
+            color: #64748b; /* Lighter color */
+            font-weight: normal; /* Normal weight */
+            margin-left: 0.25rem; /* A bit more separation from price value */
+        }
+
+        /* Custom Autocomplete Suggestions Styling */
+        .autocomplete-suggestions {
+            position: absolute;
+            top: 100%; /* Position below the input */
+            left: 0;
+            right: 0;
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-top: none;
+            border-radius: 0 0 0.75rem 0.75rem; /* Rounded bottom corners */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            z-index: 999; /* Ensure it's above other content but below modals */
+            max-height: 200px; /* Limit height and enable scrolling */
+            overflow-y: auto;
+            display: none; /* Hidden by default */
+        }
+
+        .autocomplete-suggestions div {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9; /* Light separator */
+            transition: background-color 0.2s ease;
+        }
+
+        .autocomplete-suggestions div:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-suggestions div:hover {
+            background-color: #f0f4f8; /* Light hover background */
+        }
+
 
         /* Responsive adjustments for modal buttons */
         @media (max-width: 480px) {
@@ -353,12 +402,40 @@
                 width: 100%;
             }
         }
+        /* New responsive adjustments for input grid */
+        .input-grid {
+            display: flex; /* Default to flex for mobile */
+            flex-direction: column; /* Stack items vertically */
+            gap: 2.5rem; /* A generous default vertical gap between elements (40px) */
+            margin-top: 1rem; /* Margin from the section title */
+        }
+        @media (min-width: 640px) {
+            .input-grid {
+                display: grid; /* Switch to grid on larger screens */
+                grid-template-columns: 1fr 1fr 1fr; /* 3 equal columns */
+                gap-x: 10rem; /* Horizontal gap */
+                gap-y: 6rem; /* Large vertical gap between grid rows */
+            }
+            .btn-primary {
+                grid-column: span 3; /* Button spans all 3 columns on desktop */
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="settings-button-container">
-            <button id="openSettingsBtn" class="settings-button">Settings</button>
+        <div class="flex justify-between items-start w-full mb-6">
+            <!-- Current Store Input Group (Top-Left) -->
+            <div class="input-group flex items-center gap-2 relative">
+                <label for="defaultStoreNameInput" class="text-sm font-medium text-gray-600 whitespace-nowrap">Current Store:</label>
+                <input type="text" id="defaultStoreNameInput" placeholder="e.g., Main Supermarket"
+                       class="w-28 sm:w-36 md:w-40 py-1 px-2 text-sm rounded-md border border-gray-300 focus:ring-blue-500 focus:border-blue-500" autocomplete="off">
+                <div id="defaultStoreSuggestions" class="autocomplete-suggestions"></div>
+            </div>
+            <!-- Settings Button (Top-Right) -->
+            <div class="settings-button-container">
+                <button id="openSettingsBtn" class="settings-button">Settings</button>
+            </div>
         </div>
 
         <h1>🛍️ Grocery Price Tracker</h1>
@@ -368,7 +445,13 @@
             <div class="input-grid">
                 <div class="input-group">
                     <label for="productName">Product Name:</label>
-                    <input type="text" id="productName" placeholder="e.g., Milk" class="focus:ring-blue-500 focus:border-blue-500">
+                    <!-- Input for product name, will use custom autocomplete -->
+                    <input type="text" id="productName" placeholder="e.g., Milk" class="focus:ring-blue-500 focus:border-blue-500" autocomplete="off">
+                    <div id="productSuggestions" class="autocomplete-suggestions"></div>
+                </div>
+                <div class="input-group">
+                    <label for="initialPrice">Current Price:</label>
+                    <input type="number" id="initialPrice" step="0.01" min="0" placeholder="e.g., 3.99" class="focus:ring-blue-500 focus:border-blue-500" autocomplete="off">
                 </div>
                 <div class="input-group">
                     <label for="productUnit">Unit (Optional):</label>
@@ -383,6 +466,7 @@
                         <option value="ml">ml</option>
                         <option value="liter">Liter</option>
                         <option value="gallon">Gallon</option>
+                        <option value="half_gallon">Half Gallon</option>
                         <option value="pack">Pack</option>
                         <option value="dozen">Dozen</option>
                         <option value="box">Box</option>
@@ -390,10 +474,6 @@
                         <option value="bottle">Bottle</option>
                         <option value="can">Can</option>
                     </select>
-                </div>
-                <div class="input-group">
-                    <label for="initialPrice">Current Price:</label>
-                    <input type="number" id="initialPrice" step="0.01" min="0" placeholder="e.g., 3.99" class="focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <button id="addProductBtn" class="btn-primary">Add Product</button>
             </div>
@@ -445,6 +525,12 @@
                 <label for="newPriceInput">New Price:</label>
                 <input type="number" id="newPriceInput" step="0.01" min="0" placeholder="e.g., 4.25" class="focus:ring-blue-500 focus:border-blue-500">
             </div>
+            <div class="input-group">
+                <label for="updatePriceModalStoreInput">Store Name (Optional):</label>
+                <!-- Input for update modal store, will use custom autocomplete -->
+                <input type="text" id="updatePriceModalStoreInput" placeholder="e.g., Target" class="focus:ring-blue-500 focus:border-blue-500" autocomplete="off">
+                <div id="updateStoreSuggestions" class="autocomplete-suggestions"></div>
+            </div>
             <div class="update-price-buttons mt-6">
                 <button id="submitNewPriceBtn" class="btn btn-confirm">Update</button>
                 <button id="cancelNewPriceBtn" class="btn btn-cancel">Cancel</button>
@@ -464,6 +550,13 @@
         const installButton = document.getElementById('installButton');
         const modernPriceWindowMonthsInput = document.getElementById('modernPriceWindowMonths');
 
+        // New Default Store Input & its custom suggestions
+        const defaultStoreNameInput = document.getElementById('defaultStoreNameInput');
+        const defaultStoreSuggestions = document.getElementById('defaultStoreSuggestions');
+
+        // Custom suggestions for products
+        const productSuggestions = document.getElementById('productSuggestions');
+
         // Modal Elements
         const openSettingsBtn = document.getElementById('openSettingsBtn');
         const closeSettingsBtn = document.getElementById('closeSettingsBtn');
@@ -481,12 +574,15 @@
         const updatePriceModalTitle = document.getElementById('updatePriceModalTitle');
         const updatePriceModalCurrentPrice = document.getElementById('updatePriceModalCurrentPrice');
         const newPriceInput = document.getElementById('newPriceInput');
+        const updatePriceModalStoreInput = document.getElementById('updatePriceModalStoreInput');
+        const updateStoreSuggestions = document.getElementById('updateStoreSuggestions'); // Custom suggestions for update modal
         const submitNewPriceBtn = document.getElementById('submitNewPriceBtn');
         const cancelNewPriceBtn = document.getElementById('cancelNewPriceBtn');
 
         let deferredPrompt; // For PWA install prompt
         let productToDeleteId = null; // Store ID of product to be deleted
         let productToUpdateIndex = null; // Store index of product being updated
+        let defaultStoreName = ''; // Global variable for the selected default store
 
         // --- PWA Service Worker Registration ---
         if ('serviceWorker' in navigator) {
@@ -534,6 +630,123 @@
         let modernPriceWindowMonths = parseInt(localStorage.getItem('modernPriceWindowMonths')) || 12;
         modernPriceWindowMonthsInput.value = modernPriceWindowMonths;
 
+        // Load default store name from localStorage on startup
+        defaultStoreName = localStorage.getItem('defaultStoreName') || '';
+        defaultStoreNameInput.value = defaultStoreName;
+
+        // Event listener for the default store input
+        defaultStoreNameInput.addEventListener('input', (event) => {
+            defaultStoreName = event.target.value.trim();
+            localStorage.setItem('defaultStoreName', defaultStoreName); // Save to localStorage
+        });
+
+        // Helper functions to get unique names for autocomplete
+        function getUniqueProductNames() {
+            const uniqueNames = new Set();
+            products.forEach(product => {
+                uniqueNames.add(product.name);
+            });
+            return Array.from(uniqueNames).sort();
+        }
+
+        function getUniqueStoreNames() {
+            const uniqueNames = new Set();
+            products.forEach(product => {
+                product.priceHistory.forEach(entry => {
+                    if (entry.store) {
+                        uniqueNames.add(entry.store);
+                    }
+                });
+            });
+            return Array.from(uniqueNames).sort();
+        }
+
+        // Function to set up custom autocomplete for an input field
+        function setupAutocomplete(inputElement, suggestionsContainer, getSuggestionsFunction) {
+            let timeout = null; // To handle blur event delay
+
+            inputElement.addEventListener('input', () => {
+                const inputValue = inputElement.value.trim().toLowerCase();
+                suggestionsContainer.innerHTML = ''; // Clear previous suggestions
+
+                if (inputValue.length === 0) {
+                    suggestionsContainer.style.display = 'none';
+                    // If the input is cleared, also clear the unit if it's the product name input
+                    if (inputElement.id === 'productName') {
+                        productUnitInput.value = '';
+                    }
+                    return;
+                }
+
+                const allSuggestions = getSuggestionsFunction();
+                const filteredSuggestions = allSuggestions
+                    .filter(name => name.toLowerCase().startsWith(inputValue));
+
+                if (filteredSuggestions.length > 0) {
+                    filteredSuggestions.forEach(name => {
+                        const suggestionDiv = document.createElement('div');
+                        suggestionDiv.textContent = name;
+                        suggestionDiv.addEventListener('mousedown', (event) => { // Use mousedown to prevent blur from hiding it
+                            event.preventDefault(); // Prevent input from losing focus immediately
+                            inputElement.value = name;
+                            suggestionsContainer.style.display = 'none';
+
+                            // If this is the default store input, update the global defaultStoreName
+                            if (inputElement.id === 'defaultStoreNameInput') {
+                                defaultStoreName = name;
+                                localStorage.setItem('defaultStoreName', defaultStoreName);
+                            }
+                            // If this is the product name input, and a product exists with this name,
+                            // populate the unit and price fields based on that product's latest entry
+                            if (inputElement.id === 'productName') {
+                                const selectedProduct = products.find(p => p.name.toLowerCase() === name.toLowerCase());
+                                if (selectedProduct) {
+                                    // Set the unit value from the selected product's unit property
+                                    productUnitInput.value = selectedProduct.unit || '';
+                                    console.log(`Setting productUnitInput.value to: ${productUnitInput.value} (from selectedProduct.unit: ${selectedProduct.unit})`); // Debugging line
+
+                                    if (selectedProduct.priceHistory && selectedProduct.priceHistory.length > 0) {
+                                        initialPriceInput.value = selectedProduct.priceHistory[selectedProduct.priceHistory.length - 1].price || '';
+                                    } else {
+                                        initialPriceInput.value = '';
+                                    }
+                                    // Also update the default store if the product has a last recorded store
+                                    if (selectedProduct.priceHistory && selectedProduct.priceHistory.length > 0 && selectedProduct.priceHistory[selectedProduct.priceHistory.length - 1].store) {
+                                        defaultStoreNameInput.value = selectedProduct.priceHistory[selectedProduct.priceHistory.length - 1].store;
+                                        defaultStoreName = defaultStoreNameInput.value;
+                                        localStorage.setItem('defaultStoreName', defaultStoreName);
+                                    }
+                                }
+                            }
+                        });
+                        suggestionsContainer.appendChild(suggestionDiv);
+                    });
+                    suggestionsContainer.style.display = 'block';
+                } else {
+                    suggestionsContainer.style.display = 'none';
+                    // If no suggestions, and it's the product name input, clear the unit
+                    if (inputElement.id === 'productName') {
+                        productUnitInput.value = '';
+                    }
+                }
+            });
+
+            inputElement.addEventListener('blur', () => {
+                // Delay hiding to allow click event on suggestions to fire
+                timeout = setTimeout(() => {
+                    suggestionsContainer.style.display = 'none';
+                }, 100);
+            });
+
+            inputElement.addEventListener('focus', () => {
+                 // Clear suggestions on focus. They will reappear on typing.
+                 suggestionsContainer.innerHTML = '';
+                 suggestionsContainer.style.display = 'none';
+                 if (timeout) clearTimeout(timeout);
+            });
+        }
+
+
         function updateProductStatistics(product) {
             if (product.priceHistory && product.priceHistory.length > 0) {
                 const now = new Date();
@@ -548,29 +761,54 @@
 
                 const allPrices = product.priceHistory.map(entry => entry.price);
 
-                product.currentPrice = allPrices[allPrices.length - 1];
+                product.currentPrice = allPrices[allPrices.length - 1]; // Latest price is always current
+
                 product.averagePrice = allPrices.reduce((sum, p) => sum + p, 0) / allPrices.length;
 
                 if (modernPrices.length > 0) {
-                    product.highestPrice = Math.max(...modernPrices);
-                    product.lowestPrice = Math.min(...modernPrices);
+                    const highestPriceValue = Math.max(...modernPrices);
+                    const lowestPriceValue = Math.min(...modernPrices);
+
+                    const highestEntry = product.priceHistory.find(entry =>
+                        entry.price === highestPriceValue &&
+                        (currentMonthTotal - (new Date(entry.timestamp).getFullYear() * 12 + new Date(entry.timestamp).getMonth())) <= modernPriceWindowMonths
+                    );
+                    const lowestEntry = product.priceHistory.find(entry =>
+                        entry.price === lowestPriceValue &&
+                        (currentMonthTotal - (new Date(entry.timestamp).getFullYear() * 12 + new Date(entry.timestamp).getMonth())) <= modernPriceWindowMonths
+                    );
+
+                    product.highestPrice = highestPriceValue;
+                    product.highestPriceStore = highestEntry ? highestEntry.store : 'N/A';
+
+                    product.lowestPrice = lowestPriceValue;
+                    product.lowestPriceStore = lowestEntry ? lowestEntry.store : 'N/A';
+
                 } else {
+                    product.currentPrice = null;
+                    product.averagePrice = null;
                     product.highestPrice = null;
                     product.lowestPrice = null;
+                    product.highestPriceStore = null;
+                    product.lowestPriceStore = null;
                 }
             } else {
                 product.currentPrice = null;
                 product.averagePrice = null;
                 product.highestPrice = null;
                 product.lowestPrice = null;
+                product.highestPriceStore = null;
+                product.lowestPriceStore = null;
             }
         }
 
         function renderProducts() {
+            console.log("Rendering products...");
             productListDiv.innerHTML = '';
             if (products.length === 0) {
                 noProductsMessage.classList.remove('hidden');
                 productListDiv.appendChild(noProductsMessage);
+                console.log("No products to display.");
                 return;
             } else {
                 noProductsMessage.classList.add('hidden');
@@ -581,19 +819,24 @@
             sortedProducts.forEach((product) => {
                 updateProductStatistics(product);
 
+                const latestPriceEntry = product.priceHistory.length > 0 ? product.priceHistory[product.priceHistory.length - 1] : null;
+                const latestStoreForHeader = latestPriceEntry && latestPriceEntry.store ? latestPriceEntry.store : '';
+
                 const productItem = document.createElement('div');
                 productItem.className = 'product-item';
-                productItem.dataset.productName = product.name; // For populating input field
-                productItem.dataset.productId = product.id; // For event delegation
+                productItem.dataset.productName = product.name;
+                productItem.dataset.productId = product.id;
                 productItem.innerHTML = `
                     <div class="product-details">
-                        <h3>${product.name} ${product.unit ? `<span class="text-gray-500 text-sm font-normal">(${product.unit})</span>` : ''}</h3>
+                        <h3>${product.name} ${product.unit ? `<span class="text-gray-500 text-sm font-normal">(${product.unit})</span>` : ''}
+                            ${latestStoreForHeader ? `<span class="product-store">(${latestStoreForHeader})</span>` : ''}
+                        </h3>
                     </div>
                     <div class="price-actions">
                         <div class="price-info-grid">
                             <div>
                                 <span class="label">Current Price:</span>
-                                <span class="value current-price-value">$${product.currentPrice ? product.currentPrice.toFixed(2) : 'N/A'}</span>
+                                <span class="value current-price-value">$${product.currentPrice ? product.currentPrice.toFixed(2) : 'N/A'}${latestPriceEntry && latestPriceEntry.store ? ` <span class="store-display">(${latestPriceEntry.store})</span>` : ''}</span>
                             </div>
                             <div>
                                 <span class="label">Average Price:</span>
@@ -608,52 +851,71 @@
                                 <span class="value low-price-value">$${product.lowestPrice ? product.lowestPrice.toFixed(2) : 'N/A'}</span>
                             </div>
                         </div>
-                        <small class="text-gray-500 mt-2">Last Updated: ${product.priceHistory.length > 0 ? new Date(product.priceHistory[product.priceHistory.length - 1].timestamp).toLocaleString() : 'Never'}</small>
+                        <small class="text-gray-500 mt-2">
+                            Last Updated: ${latestPriceEntry ? new Date(latestPriceEntry.timestamp).toLocaleString() : 'Never'}
+                            ${latestStoreForHeader ? ` at <strong>${latestStoreForHeader}</strong>` : ''}
+                        </small>
                         <button class="btn-secondary check-price-btn mt-2" data-product-id="${product.id}">Update Price</button>
                         <button class="btn-secondary delete-product-btn delete-btn" data-product-id="${product.id}">Delete</button>
                     </div>
                 `;
                 productListDiv.appendChild(productItem);
             });
+            console.log("Products rendered successfully.");
 
             // Event delegation for clicks on product items and buttons
-            // This listener is added only once outside of renderProducts loop
-            productListDiv.onclick = (event) => { // Using .onclick to ensure only one listener, overriding any previous ones
-                // Handle product item click to populate name field
+            productListDiv.onclick = (event) => {
                 if (event.target.closest('.product-item')) {
                     const item = event.target.closest('.product-item');
-                    // Only populate if not clicking directly on a button within the item
                     if (!event.target.closest('.check-price-btn') && !event.target.closest('.delete-product-btn')) {
                         const productName = item.dataset.productName;
                         if (productName) {
+                            console.log(`Product item clicked: ${productName}`);
                             productNameInput.value = productName;
+                            // Pre-fill the unit and price fields based on the selected product
+                            const product = products.find(p => p.name.toLowerCase() === productName.toLowerCase()); // Use toLowerCase for case-insensitive match
+                            if (product) {
+                                productUnitInput.value = product.unit || '';
+                                console.log(`Selected Product Unit (from object): ${product.unit}, Setting productUnitInput.value to: ${productUnitInput.value}`); // Debugging line
+
+                                if (product.priceHistory && product.priceHistory.length > 0) {
+                                    initialPriceInput.value = product.priceHistory[product.priceHistory.length - 1].price || '';
+                                } else {
+                                    initialPriceInput.value = '';
+                                }
+                                console.log(`Setting initialPriceInput.value to: ${initialPriceInput.value}`); // Debugging line
+
+                                // Also update the default store if the product has a last recorded store
+                                if (product.priceHistory && product.priceHistory.length > 0 && product.priceHistory[selectedProduct.priceHistory.length - 1].store) {
+                                    defaultStoreNameInput.value = product.priceHistory[product.priceHistory.length - 1].store;
+                                    defaultStoreName = defaultStoreNameInput.value;
+                                    localStorage.setItem('defaultStoreName', defaultStoreName);
+                                }
+                            }
                         }
                     }
                 }
 
-                // Handle Update Price button click
                 if (event.target.classList.contains('check-price-btn')) {
                     const productId = parseInt(event.target.dataset.productId);
                     const productIndex = products.findIndex(p => p.id === productId);
                     if (productIndex > -1) {
-                        showUpdatePriceModal(productIndex); // Show custom modal
+                        showUpdatePriceModal(productIndex);
                     }
                 }
 
-                // Handle Delete button click (show confirmation modal)
                 if (event.target.classList.contains('delete-product-btn')) {
                     const productId = parseInt(event.target.dataset.productId);
                     const product = products.find(p => p.id === productId);
                     if (product) {
-                        productToDeleteId = productId; // Store the ID
+                        productToDeleteId = productId;
                         confirmMessage.textContent = `Are you sure you want to delete "${product.name}"?`;
-                        confirmModal.classList.add('show'); // Show the confirmation modal
+                        confirmModal.classList.add('show');
                     }
                 }
             };
         }
 
-        // Function to perform the actual deletion after confirmation
         function performDeleteProduct() {
             if (productToDeleteId !== null) {
                 const indexToDelete = products.findIndex(p => p.id === productToDeleteId);
@@ -663,87 +925,97 @@
                     renderProducts();
                     console.log(`Product with ID ${productToDeleteId} deleted.`);
                 }
-                productToDeleteId = null; // Reset
+                productToDeleteId = null;
             }
-            confirmModal.classList.remove('show'); // Hide modal regardless
+            confirmModal.classList.remove('show');
         }
 
-        // Add event listeners for confirmation modal buttons
         confirmDeleteBtn.addEventListener('click', performDeleteProduct);
         cancelDeleteBtn.addEventListener('click', () => {
             confirmModal.classList.remove('show');
-            productToDeleteId = null; // Clear ID if canceled
+            productToDeleteId = null;
         });
 
-        // Close confirm modal if user clicks outside of it
         confirmModal.addEventListener('click', (event) => {
             if (event.target === confirmModal) {
                 confirmModal.classList.remove('show');
-                productToDeleteId = null; // Clear ID if canceled
+                productToDeleteId = null;
             }
         });
 
 
-        // --- New: Update Price Modal Logic ---
+        // --- Update Price Modal Logic ---
         function showUpdatePriceModal(productIndex) {
-            productToUpdateIndex = productIndex; // Store the index of the product being updated
+            productToUpdateIndex = productIndex;
             const product = products[productIndex];
 
             updatePriceModalTitle.textContent = `Update Price for "${product.name}"`;
             updatePriceModalCurrentPrice.textContent = `Current: $${product.currentPrice ? product.currentPrice.toFixed(2) : 'N/A'}`;
-            newPriceInput.value = product.currentPrice || ''; // Pre-fill with current price or empty
+            newPriceInput.value = product.currentPrice || '';
+
+            // Pre-fill store in modal with the current default store
+            updatePriceModalStoreInput.value = defaultStoreName;
+
             updatePriceModal.classList.add('show');
-            newPriceInput.focus(); // Focus on the input field
+            newPriceInput.focus();
         }
 
         submitNewPriceBtn.addEventListener('click', () => {
             const newPrice = parseFloat(newPriceInput.value.trim());
+            const newStore = updatePriceModalStoreInput.value.trim() || defaultStoreName;
+
             if (productToUpdateIndex !== null && !isNaN(newPrice) && newPrice >= 0) {
                 const product = products[productToUpdateIndex];
                 product.priceHistory.push({
                     price: newPrice,
-                    timestamp: new Date().toISOString()
+                    timestamp: new Date().toISOString(),
+                    store: newStore
                 });
                 saveProducts();
                 renderProducts();
-                console.log(`Price for ${product.name} updated to $${newPrice.toFixed(2)}`);
+                console.log(`Price for ${product.name} updated to $${newPrice.toFixed(2)} at ${newStore || 'N/A'}`);
             } else {
                 console.warn('Invalid price entered. Please enter a valid number.');
             }
             updatePriceModal.classList.remove('show');
-            productToUpdateIndex = null; // Reset
+            productToUpdateIndex = null;
+            updatePriceModalStoreInput.value = '';
         });
 
         cancelNewPriceBtn.addEventListener('click', () => {
             updatePriceModal.classList.remove('show');
-            productToUpdateIndex = null; // Reset
+            productToUpdateIndex = null;
+            updatePriceModalStoreInput.value = '';
         });
 
         closeUpdatePriceModalBtn.addEventListener('click', () => {
             updatePriceModal.classList.remove('show');
-            productToUpdateIndex = null; // Reset
+            productToUpdateIndex = null;
+            updatePriceModalStoreInput.value = '';
         });
 
         updatePriceModal.addEventListener('click', (event) => {
             if (event.target === updatePriceModal) {
                 updatePriceModal.classList.remove('show');
-                productToUpdateIndex = null; // Reset
+                productToUpdateIndex = null;
+                updatePriceModalStoreInput.value = '';
             }
         });
 
         newPriceInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
                 event.preventDefault();
-                submitNewPriceBtn.click(); // Simulate click on update button
+                submitNewPriceBtn.click();
             }
         });
-        // --- End New: Update Price Modal Logic ---
+        // --- End Update Price Modal Logic ---
 
 
         addProductBtn.addEventListener('click', () => {
             const name = productNameInput.value.trim();
             const unit = productUnitInput.value;
             const initialPriceStr = initialPriceInput.value.trim();
+            const store = defaultStoreName;
 
             if (!name) {
                 console.warn('Please enter a product name.');
@@ -765,9 +1037,11 @@
                 if (initialPrice !== null) {
                     existingProduct.priceHistory.push({
                         price: initialPrice,
-                        timestamp: new Date().toISOString()
+                        timestamp: new Date().toISOString(),
+                        store: store
                     });
                 }
+                // Only update the unit if a value is provided (i.e., it's not the default empty option)
                 if (unit) {
                     existingProduct.unit = unit;
                 }
@@ -776,7 +1050,7 @@
                 const newProduct = {
                     id: Date.now(),
                     name: name,
-                    unit: unit,
+                    unit: unit, // Set unit for new products
                     priceHistory: [],
                     currentPrice: null,
                     averagePrice: null,
@@ -787,7 +1061,8 @@
                 if (initialPrice !== null) {
                     newProduct.priceHistory.push({
                         price: initialPrice,
-                        timestamp: new Date().toISOString()
+                        timestamp: new Date().toISOString(),
+                        store: store
                     });
                 }
                 products.push(newProduct);
@@ -796,14 +1071,24 @@
 
             saveProducts();
             renderProducts();
+
+            // Clear product name and price fields, and reset unit to empty
             productNameInput.value = '';
-            productUnitInput.value = '';
             initialPriceInput.value = '';
+            productUnitInput.value = ''; // Reset unit to default empty
+            
+            console.log(`Product Name Input after add/clear: "${productNameInput.value}"`); // Debugging line
+            console.log(`Initial Price Input after add/clear: "${initialPriceInput.value}"`); // Debugging line
+            console.log(`Product Unit Input after add/clear: "${productUnitInput.value}"`); // Debugging line
+
+            console.log("Products array after adding:", products);
         });
 
         function saveProducts() {
             localStorage.setItem('trackedProducts', JSON.stringify(products));
             localStorage.setItem('modernPriceWindowMonths', modernPriceWindowMonths);
+            localStorage.setItem('defaultStoreName', defaultStoreName);
+            console.log("Data saved to localStorage.");
         }
 
         modernPriceWindowMonthsInput.addEventListener('change', (event) => {
@@ -820,13 +1105,42 @@
 
         // Initial render on load
         renderProducts();
+        // Set up custom autocomplete for all relevant inputs
+        setupAutocomplete(productNameInput, productSuggestions, getUniqueProductNames);
+        setupAutocomplete(defaultStoreNameInput, defaultStoreSuggestions, getUniqueStoreNames);
+        setupAutocomplete(updatePriceModalStoreInput, updateStoreSuggestions, getUniqueStoreNames);
+
+        // --- KEYBOARD NAVIGATION LOGIC ---
+        defaultStoreNameInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                productNameInput.focus(); // Move focus to Product Name
+            }
+        });
+
+        productNameInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent default form submission
+                initialPriceInput.focus(); // Move focus to Current Price
+            }
+        });
 
         initialPriceInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
-                event.preventDefault();
-                addProductBtn.click();
+                event.preventDefault(); // Prevent default form submission
+                productUnitInput.focus(); // Move focus to Unit
             }
         });
+
+        productUnitInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent default form submission
+                addProductBtn.click(); // Simulate click on Add Product button
+            }
+        });
+
+        // --- END KEYBOARD NAVIGATION LOGIC ---
+
 
         // --- Modal Logic (Settings) ---
         openSettingsBtn.addEventListener('click', () => {
@@ -835,14 +1149,14 @@
 
         closeSettingsBtn.addEventListener('click', () => {
             settingsModal.classList.remove('show');
-            renderProducts(); // Re-render products to update statistics if settings changed while modal was open
+            renderProducts();
         });
 
         // Close modal if user clicks outside of it
         settingsModal.addEventListener('click', (event) => {
             if (event.target === settingsModal) {
                 settingsModal.classList.remove('show');
-                renderProducts(); // Re-render products
+                renderProducts();
             }
         });
 
@@ -851,10 +1165,14 @@
             if (event.key === 'Escape') {
                 settingsModal.classList.remove('show');
                 confirmModal.classList.remove('show');
-                updatePriceModal.classList.remove('show'); // Also close update price modal
-                productToDeleteId = null; // Clear ID if confirm modal closed by escape
-                productToUpdateIndex = null; // Clear index if update modal closed by escape
-                renderProducts(); // Re-render products
+                updatePriceModal.classList.remove('show');
+                // Hide any active autocomplete suggestions
+                defaultStoreSuggestions.style.display = 'none';
+                updateStoreSuggestions.style.display = 'none';
+                productSuggestions.style.display = 'none'; // Also hide product suggestions
+                productToDeleteId = null;
+                productToUpdateIndex = null;
+                renderProducts();
             }
         });
     </script>
