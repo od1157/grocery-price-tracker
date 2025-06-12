@@ -3,17 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grocery Price Tracker PWA</title>
+    <title>Grocery Price Tracker App</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Inter font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Web App Manifest -->
-    <link rel="manifest" href="/manifest.json">
-    <!-- Theme color for browser UI -->
-    <meta name="theme-color" content="#3B82F6">
-    <!-- Apple Touch Icon -->
-    <link rel="apple-touch-icon" href="/icon-192x192.png">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -24,7 +20,7 @@
             align-items: flex-start; /* Align to top for better scrolling */
             min-height: 100vh;
             padding: 2rem;
-            box-sizing: border-box;
+            box-sizing: border;
         }
         .container {
             background-color: #ffffff;
@@ -95,29 +91,7 @@
             transform: translateY(0);
             box-shadow: 0 5px 15px rgba(59, 130, 246, 0.2);
         }
-        .install-button {
-            background-color: #10B981; /* Green install button */
-            color: white;
-            padding: 0.8rem 1.5rem;
-            border: none;
-            border-radius: 0.75rem;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            margin-top: 1.5rem;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.2);
-            width: 100%;
-        }
-        .install-button:hover {
-            background-color: #059669;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
-        }
-        .install-button:active {
-            transform: translateY(0);
-            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.2);
-        }
+        /* Removed install-button styling as it's no longer used */
         .product-list {
             display: flex;
             flex-direction: column;
@@ -163,11 +137,7 @@
             flex-direction: column;
             align-items: flex-start;
         }
-        .price-info-grid span {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #ef4444;
-        }
+        /* Changed generic span styling as specific classes are now used */
         .price-info-grid .label {
             font-size: 0.8rem;
             color: #64748b;
@@ -176,20 +146,20 @@
         .price-info-grid .value {
             font-size: 1rem;
             font-weight: 600;
-            color: #1e293b;
+            color: #1e293b; /* Default value color if not specifically overridden */
         }
         .price-info-grid .current-price-value {
-            color: #ef4444;
+            color: #3B82F6; /* Blue for Current Price */
             font-size: 1.2rem;
         }
         .price-info-grid .avg-price-value {
-            color: #059669;
+            color: #F59E0B; /* Amber (Yellow) for Average Price - Tailwind amber-500/600 */
         }
         .price-info-grid .high-price-value {
-            color: #dc2626;
+            color: #dc2626; /* Red for Highest Price */
         }
         .price-info-grid .low-price-value {
-            color: #2563eb;
+            color: #10B981; /* Green for Lowest Price - Tailwind emerald-500/600 */
         }
 
         .btn-secondary {
@@ -270,22 +240,31 @@
 
         /* Settings Button */
         .settings-button-container {
-            width: 100%;
-            text-align: right;
-            margin-bottom: 1rem;
+            /* Removed width: 100% and text-align: right */
+            /* Flex parent will handle alignment */
+            /* margin-bottom: 1rem; removed as well, let parent handle gap */
         }
         .settings-button {
             background-color: #60a5fa; /* A lighter blue */
             color: white;
-            padding: 0.6rem 1.2rem;
+            /* Smaller padding and font size for the icon button */
+            padding: 0.6rem 0.8rem; /* Adjusted padding */
             border-radius: 0.75rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease, transform 0.2s ease;
             box-shadow: 0 3px 10px rgba(96, 165, 250, 0.2);
+            display: flex; /* Use flex to center the icon if needed */
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem; /* Size of the icon */
         }
         .settings-button:hover {
             background-color: #3b82f6;
+            transform: translateY(-2px);
+        }
+        .settings-button:active {
+            transform: translateY(0);
         }
 
         /* Confirmation & Update Price Modal specific styles */
@@ -351,8 +330,8 @@
             color: #64748b; /* Lighter color */
             margin-left: 0.5rem; /* Space between product name and store */
         }
-        /* Style for store name next to current price */
-        .price-info-grid .current-price-value .store-display {
+        /* Unified style for any store display inside price info to ensure consistency */
+        .price-info-grid .value .store-display { /* Increased specificity here */
             font-size: 0.75rem; /* Smaller font for store name */
             color: #64748b; /* Lighter color */
             font-weight: normal; /* Normal weight */
@@ -391,6 +370,29 @@
             background-color: #f0f4f8; /* Light hover background */
         }
 
+        /* Generic Error Message Box */
+        .error-message-box {
+            position: fixed;
+            bottom: 1rem;
+            left: 1rem;
+            background-color: #ef4444; /* Red background */
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: none; /* Hidden by default */
+            font-size: 0.9rem;
+            animation: fadeInOut 5s forwards; /* Fade in and out */
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(20px); }
+            10% { opacity: 1; transform: translateY(0); }
+            90% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(20px); }
+        }
+
 
         /* Responsive adjustments for modal buttons */
         @media (max-width: 480px) {
@@ -424,7 +426,11 @@
 </head>
 <body>
     <div class="container">
-        <div class="flex justify-between items-start w-full mb-6">
+        <!-- Error Message Box -->
+        <div id="errorMessage" class="error-message-box"></div>
+
+        <!-- Adjusted the parent flex container for better alignment and spacing -->
+        <div class="flex justify-between items-center w-full mb-6">
             <!-- Current Store Input Group (Top-Left) -->
             <div class="input-group flex items-center gap-2 relative">
                 <label for="defaultStoreNameInput" class="text-sm font-medium text-gray-600 whitespace-nowrap">Current Store:</label>
@@ -434,7 +440,9 @@
             </div>
             <!-- Settings Button (Top-Right) -->
             <div class="settings-button-container">
-                <button id="openSettingsBtn" class="settings-button">Settings</button>
+                <button id="openSettingsBtn" class="settings-button" aria-label="Settings">
+                    <i class="fas fa-cog"></i> <!-- Font Awesome Gear Icon -->
+                </button>
             </div>
         </div>
 
@@ -487,7 +495,7 @@
             </div>
         </div>
 
-        <button id="installButton" class="install-button hidden">Install App</button>
+        <!-- Removed install button as PWA features are disabled in this environment -->
     </div>
 
     <!-- Settings Modal -->
@@ -547,8 +555,9 @@
         const addProductBtn = document.getElementById('addProductBtn');
         const productListDiv = document.getElementById('productList');
         const noProductsMessage = document.getElementById('noProductsMessage');
-        const installButton = document.getElementById('installButton');
+        // const installButton = document.getElementById('installButton'); // Removed as PWA is disabled
         const modernPriceWindowMonthsInput = document.getElementById('modernPriceWindowMonths');
+        const errorMessageDiv = document.getElementById('errorMessage'); // New error message div
 
         // New Default Store Input & its custom suggestions
         const defaultStoreNameInput = document.getElementById('defaultStoreNameInput');
@@ -579,50 +588,60 @@
         const submitNewPriceBtn = document.getElementById('submitNewPriceBtn');
         const cancelNewPriceBtn = document.getElementById('cancelNewPriceBtn');
 
-        let deferredPrompt; // For PWA install prompt
+        let deferredPrompt; // For PWA install prompt (kept as placeholder for consistency if PWA is re-enabled later)
         let productToDeleteId = null; // Store ID of product to be deleted
         let productToUpdateIndex = null; // Store index of product being updated
         let defaultStoreName = ''; // Global variable for the selected default store
 
-        // --- PWA Service Worker Registration ---
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then(registration => {
-                        console.log('Service Worker registered:', registration);
-                    })
-                    .catch(error => {
-                        console.error('Service Worker registration failed:', error);
-                    });
-            });
+        // Function to display error messages
+        function showErrorMessage(message) {
+            errorMessageDiv.textContent = message;
+            errorMessageDiv.style.display = 'block';
+            setTimeout(() => {
+                errorMessageDiv.style.display = 'none';
+            }, 5000); // Hide after 5 seconds
         }
 
-        // --- PWA Install Prompt Logic ---
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            installButton.classList.remove('hidden');
-        });
+        // --- PWA Service Worker Registration (DISABLED FOR THIS ENVIRONMENT) ---
+        // if ('serviceWorker' in navigator) {
+        //     window.addEventListener('load', () => {
+        //         navigator.serviceWorker.register('/service-worker.js')
+        //             .then(registration => {
+        //                 console.log('Service Worker registered:', registration);
+        //             })
+        //             .catch(error => {
+        //                 console.error('Service Worker registration failed:', error);
+        //                 showErrorMessage('App might not work offline: Service Worker registration failed.');
+        //             });
+        //     });
+        // }
 
-        installButton.addEventListener('click', () => {
-            installButton.classList.add('hidden');
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then((choiceResult) => {
-                    if (choiceResult.outcome === 'accepted') {
-                        console.log('User accepted the A2HS prompt');
-                    } else {
-                        console.log('User dismissed the A2HS prompt');
-                    }
-                    deferredPrompt = null;
-                });
-            }
-        });
+        // --- PWA Install Prompt Logic (DISABLED FOR THIS ENVIRONMENT) ---
+        // window.addEventListener('beforeinstallprompt', (e) => {
+        //     e.preventDefault();
+        //     deferredPrompt = e;
+        //     installButton.classList.remove('hidden');
+        // });
 
-        window.addEventListener('appinstalled', () => {
-            console.log('PWA was installed!');
-            installButton.classList.add('hidden');
-        });
+        // installButton.addEventListener('click', () => {
+        //     installButton.classList.add('hidden');
+        //     if (deferredPrompt) {
+        //         deferredPrompt.prompt();
+        //         deferredPrompt.userChoice.then((choiceResult) => {
+        //             if (choiceResult.outcome === 'accepted') {
+        //                 console.log('User accepted the A2HS prompt');
+        //             } else {
+        //                 console.log('User dismissed the A2HS prompt');
+        //             }
+        //             deferredPrompt = null;
+        //         });
+        //     }
+        // });
+
+        // window.addEventListener('appinstalled', () => {
+        //     console.log('PWA was installed!');
+        //     installButton.classList.add('hidden');
+        // });
 
         // --- Product Tracking Logic ---
 
@@ -699,20 +718,20 @@
                             // If this is the product name input, and a product exists with this name,
                             // populate the unit and price fields based on that product's latest entry
                             if (inputElement.id === 'productName') {
-                                const selectedProduct = products.find(p => p.name.toLowerCase() === name.toLowerCase());
-                                if (selectedProduct) {
-                                    // Set the unit value from the selected product's unit property
-                                    productUnitInput.value = selectedProduct.unit || '';
-                                    console.log(`Setting productUnitInput.value to: ${productUnitInput.value} (from selectedProduct.unit: ${selectedProduct.unit})`); // Debugging line
+                                const product = products.find(p => p.name.toLowerCase() === name.toLowerCase());
+                                if (product) {
+                                    // Set the unit value from the product's unit property
+                                    productUnitInput.value = product.unit || '';
+                                    console.log(`Setting productUnitInput.value to: ${productUnitInput.value} (from product.unit: ${product.unit})`); // Debugging line
 
-                                    if (selectedProduct.priceHistory && selectedProduct.priceHistory.length > 0) {
-                                        initialPriceInput.value = selectedProduct.priceHistory[selectedProduct.priceHistory.length - 1].price || '';
+                                    if (product.priceHistory && product.priceHistory.length > 0) {
+                                        initialPriceInput.value = product.priceHistory[product.priceHistory.length - 1].price || '';
                                     } else {
                                         initialPriceInput.value = '';
                                     }
                                     // Also update the default store if the product has a last recorded store
-                                    if (selectedProduct.priceHistory && selectedProduct.priceHistory.length > 0 && selectedProduct.priceHistory[selectedProduct.priceHistory.length - 1].store) {
-                                        defaultStoreNameInput.value = selectedProduct.priceHistory[selectedProduct.priceHistory.length - 1].store;
+                                    if (product.priceHistory && product.priceHistory.length > 0 && product.priceHistory[product.priceHistory.length - 1].store) {
+                                        defaultStoreNameInput.value = product.priceHistory[product.priceHistory.length - 1].store;
                                         defaultStoreName = defaultStoreNameInput.value;
                                         localStorage.setItem('defaultStoreName', defaultStoreName);
                                     }
@@ -769,10 +788,12 @@
                     const highestPriceValue = Math.max(...modernPrices);
                     const lowestPriceValue = Math.min(...modernPrices);
 
+                    // Find the entry that corresponds to the highest price within the modern window
                     const highestEntry = product.priceHistory.find(entry =>
                         entry.price === highestPriceValue &&
                         (currentMonthTotal - (new Date(entry.timestamp).getFullYear() * 12 + new Date(entry.timestamp).getMonth())) <= modernPriceWindowMonths
                     );
+                    // Find the entry that corresponds to the lowest price within the modern window
                     const lowestEntry = product.priceHistory.find(entry =>
                         entry.price === lowestPriceValue &&
                         (currentMonthTotal - (new Date(entry.timestamp).getFullYear() * 12 + new Date(entry.timestamp).getMonth())) <= modernPriceWindowMonths
@@ -844,11 +865,11 @@
                             </div>
                             <div>
                                 <span class="label">Highest Price (Modern):</span>
-                                <span class="value high-price-value">$${product.highestPrice ? product.highestPrice.toFixed(2) : 'N/A'}</span>
+                                <span class="value high-price-value">$${product.highestPrice ? product.highestPrice.toFixed(2) : 'N/A'}${product.highestPriceStore ? ` <span class="store-display">(${product.highestPriceStore})</span>` : ''}</span>
                             </div>
                             <div>
                                 <span class="label">Lowest Price (Modern):</span>
-                                <span class="value low-price-value">$${product.lowestPrice ? product.lowestPrice.toFixed(2) : 'N/A'}</span>
+                                <span class="value low-price-value">$${product.lowestPrice ? product.lowestPrice.toFixed(2) : 'N/A'}${product.lowestPriceStore ? ` <span class="store-display">(${product.lowestPriceStore})</span>` : ''}</span>
                             </div>
                         </div>
                         <small class="text-gray-500 mt-2">
@@ -876,7 +897,7 @@
                             const product = products.find(p => p.name.toLowerCase() === productName.toLowerCase()); // Use toLowerCase for case-insensitive match
                             if (product) {
                                 productUnitInput.value = product.unit || '';
-                                console.log(`Selected Product Unit (from object): ${product.unit}, Setting productUnitInput.value to: ${productUnitInput.value}`); // Debugging line
+                                console.log(`Setting productUnitInput.value to: ${productUnitInput.value} (from product.unit: ${product.unit})`); // Debugging line
 
                                 if (product.priceHistory && product.priceHistory.length > 0) {
                                     initialPriceInput.value = product.priceHistory[product.priceHistory.length - 1].price || '';
@@ -885,8 +906,8 @@
                                 }
                                 console.log(`Setting initialPriceInput.value to: ${initialPriceInput.value}`); // Debugging line
 
-                                // Also update the default store if the product has a last recorded store
-                                if (product.priceHistory && product.priceHistory.length > 0 && product.priceHistory[selectedProduct.priceHistory.length - 1].store) {
+                                // Corrected: selectedProduct -> product
+                                if (product.priceHistory && product.priceHistory.length > 0 && product.priceHistory[product.priceHistory.length - 1].store) {
                                     defaultStoreNameInput.value = product.priceHistory[product.priceHistory.length - 1].store;
                                     defaultStoreName = defaultStoreNameInput.value;
                                     localStorage.setItem('defaultStoreName', defaultStoreName);
@@ -976,6 +997,7 @@
                 console.log(`Price for ${product.name} updated to $${newPrice.toFixed(2)} at ${newStore || 'N/A'}`);
             } else {
                 console.warn('Invalid price entered. Please enter a valid number.');
+                showErrorMessage('Invalid price entered. Please enter a valid number.');
             }
             updatePriceModal.classList.remove('show');
             productToUpdateIndex = null;
@@ -1005,7 +1027,10 @@
         newPriceInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
                 event.preventDefault();
-                submitNewPriceBtn.click();
+                // Add a slight delay to ensure focus change is processed
+                setTimeout(() => {
+                    submitNewPriceBtn.click();
+                }, 0);
             }
         });
         // --- End Update Price Modal Logic ---
@@ -1019,6 +1044,7 @@
 
             if (!name) {
                 console.warn('Please enter a product name.');
+                showErrorMessage('Please enter a product name.');
                 return;
             }
 
@@ -1027,6 +1053,7 @@
                 initialPrice = parseFloat(initialPriceStr);
                 if (isNaN(initialPrice) || initialPrice < 0) {
                     console.warn('Invalid initial price entered. Please enter a valid number.');
+                    showErrorMessage('Invalid initial price entered. Please enter a valid number.');
                     return;
                 }
             }
@@ -1085,10 +1112,15 @@
         });
 
         function saveProducts() {
-            localStorage.setItem('trackedProducts', JSON.stringify(products));
-            localStorage.setItem('modernPriceWindowMonths', modernPriceWindowMonths);
-            localStorage.setItem('defaultStoreName', defaultStoreName);
-            console.log("Data saved to localStorage.");
+            try {
+                localStorage.setItem('trackedProducts', JSON.stringify(products));
+                localStorage.setItem('modernPriceWindowMonths', modernPriceWindowMonths);
+                localStorage.setItem('defaultStoreName', defaultStoreName);
+                console.log("Data saved to localStorage.");
+            } catch (e) {
+                console.error("Error saving to localStorage:", e);
+                showErrorMessage('Error saving data. Please check browser storage settings.');
+            }
         }
 
         modernPriceWindowMonthsInput.addEventListener('change', (event) => {
@@ -1099,7 +1131,20 @@
                 renderProducts();
             } else {
                 console.warn('Please enter a valid number of months (1 or more).');
+                showErrorMessage('Please enter a valid number of months (1 or more).');
                 event.target.value = modernPriceWindowMonths;
+            }
+        });
+
+        // Add this new event listener for the modernPriceWindowMonthsInput
+        modernPriceWindowMonthsInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent default Enter key behavior (e.g., form submission)
+                // Trigger the change logic immediately
+                const changeEvent = new Event('change');
+                modernPriceWindowMonthsInput.dispatchEvent(changeEvent);
+                // Close the settings modal
+                settingsModal.classList.remove('show');
             }
         });
 
@@ -1114,28 +1159,36 @@
         defaultStoreNameInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
                 event.preventDefault();
-                productNameInput.focus(); // Move focus to Product Name
+                setTimeout(() => {
+                    productNameInput.focus(); // Move focus to Product Name
+                }, 0);
             }
         });
 
         productNameInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
                 event.preventDefault(); // Prevent default form submission
-                initialPriceInput.focus(); // Move focus to Current Price
+                setTimeout(() => {
+                    initialPriceInput.focus(); // Move focus to Current Price
+                }, 0);
             }
         });
 
         initialPriceInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
                 event.preventDefault(); // Prevent default form submission
-                productUnitInput.focus(); // Move focus to Unit
+                setTimeout(() => {
+                    productUnitInput.focus(); // Move focus to Unit
+                }, 0);
             }
         });
 
         productUnitInput.addEventListener('keydown', (event) => {
             if (event.key === 'Enter') {
                 event.preventDefault(); // Prevent default form submission
-                addProductBtn.click(); // Simulate click on Add Product button
+                setTimeout(() => {
+                    addProductBtn.click(); // Simulate click on Add Product button
+                }, 0);
             }
         });
 
