@@ -620,6 +620,9 @@
         let productToUpdateIndex = null; // Store index of product being updated
         let defaultStoreName = ''; // Global variable for the selected default store
 
+        // Define inactivity timeout (1 hour in milliseconds)
+        const INACTIVITY_TIMEOUT_MS = 60 * 60 * 1000; // 1 hour
+
         // Function to display error messages
         function showErrorMessage(message) {
             errorMessageDiv.textContent = message;
@@ -681,10 +684,17 @@
         defaultStoreNameInput.value = defaultStoreName; // Also update the visible input field
 
 
+        // Function to update the last active timestamp
+        function updateLastActiveTimestamp() {
+            localStorage.setItem('lastActiveTimestamp', Date.now());
+            console.log('Last active timestamp updated.');
+        }
+
         // Event listener for the default store input
         defaultStoreNameInput.addEventListener('input', (event) => {
             defaultStoreName = event.target.value.trim();
             localStorage.setItem('defaultStoreName', defaultStoreName); // Save to localStorage
+            updateLastActiveTimestamp(); // Update timestamp on store name change
         });
 
         // Helper functions to get unique names for autocomplete
@@ -759,6 +769,7 @@
                                     }
                                 }
                             }
+                            updateLastActiveTimestamp(); // Update timestamp on selection
                         });
                         suggestionsContainer.appendChild(suggestionDiv);
                     });
@@ -907,7 +918,7 @@
                 productListDiv.appendChild(productItem);
             });
             console.log("Products rendered successfully.");
-
+            updateLastActiveTimestamp(); // Update timestamp after rendering
             // Event delegation for clicks on product items and buttons
             productListDiv.onclick = (event) => {
                 if (event.target.closest('.product-item')) {
@@ -958,6 +969,7 @@
                         confirmModal.classList.add('show');
                     }
                 }
+                updateLastActiveTimestamp(); // Update timestamp on product item click
             };
         }
 
@@ -973,18 +985,21 @@
                 productToDeleteId = null;
             }
             confirmModal.classList.remove('show');
+            updateLastActiveTimestamp(); // Update timestamp after deletion
         }
 
         confirmDeleteBtn.addEventListener('click', performDeleteProduct);
         cancelDeleteBtn.addEventListener('click', () => {
             confirmModal.classList.remove('show');
             productToDeleteId = null;
+            updateLastActiveTimestamp(); // Update timestamp on cancel
         });
 
         confirmModal.addEventListener('click', (event) => {
             if (event.target === confirmModal) {
                 confirmModal.classList.remove('show');
                 productToDeleteId = null;
+                updateLastActiveTimestamp(); // Update timestamp on modal outside click
             }
         });
 
@@ -1003,6 +1018,7 @@
 
             updatePriceModal.classList.add('show');
             newPriceInput.focus();
+            updateLastActiveTimestamp(); // Update timestamp when showing modal
         }
 
         submitNewPriceBtn.addEventListener('click', () => {
@@ -1026,18 +1042,21 @@
             updatePriceModal.classList.remove('show');
             productToUpdateIndex = null;
             updatePriceModalStoreInput.value = '';
+            updateLastActiveTimestamp(); // Update timestamp after submission
         });
 
         cancelNewPriceBtn.addEventListener('click', () => {
             updatePriceModal.classList.remove('show');
             productToUpdateIndex = null;
             updatePriceModalStoreInput.value = '';
+            updateLastActiveTimestamp(); // Update timestamp on cancel
         });
 
         closeUpdatePriceModalBtn.addEventListener('click', () => {
             updatePriceModal.classList.remove('show');
             productToUpdateIndex = null;
             updatePriceModalStoreInput.value = '';
+            updateLastActiveTimestamp(); // Update timestamp on close button
         });
 
         updatePriceModal.addEventListener('click', (event) => {
@@ -1045,6 +1064,7 @@
                 updatePriceModal.classList.remove('show');
                 productToUpdateIndex = null;
                 updatePriceModalStoreInput.value = '';
+                updateLastActiveTimestamp(); // Update timestamp on modal outside click
             }
         });
 
@@ -1133,6 +1153,7 @@
             console.log(`Product Unit Input after add/clear: "${productUnitInput.value}"`); // Debugging line
 
             console.log("Products array after adding:", products);
+            updateLastActiveTimestamp(); // Update timestamp after adding a product
         });
 
         function saveProducts() {
@@ -1158,6 +1179,7 @@
                 showErrorMessage('Please enter a valid number of months (1 or more).');
                 event.target.value = modernPriceWindowMonths;
             }
+            updateLastActiveTimestamp(); // Update timestamp on settings change
         });
 
         // Add this new event listener for the modernPriceWindowMonthsInput
@@ -1172,29 +1194,34 @@
             }
         });
 
-        // Logic to show initial store modal on app load if defaultStoreName is not set
+        // Logic to show initial store modal on app load if defaultStoreName is not set or if inactive
         document.addEventListener('DOMContentLoaded', () => {
             // Re-load defaultStoreName just to be sure it's fresh for initial check
             defaultStoreName = localStorage.getItem('defaultStoreName') || '';
             defaultStoreNameInput.value = defaultStoreName; // Keep this updated
 
-            if (!defaultStoreName) {
+            const lastActiveTimestamp = parseInt(localStorage.getItem('lastActiveTimestamp') || '0');
+            const currentTime = Date.now();
+            const isInactive = (currentTime - lastActiveTimestamp) > INACTIVITY_TIMEOUT_MS;
+
+            if (!defaultStoreName || isInactive) {
                 initialStoreModal.classList.add('show');
                 initialStoreNameInput.focus(); // Focus the input field in the modal
             } else {
-                renderProducts(); // If store is already set, render products normally
+                renderProducts(); // If store is already set and not inactive, render products normally
+                updateLastActiveTimestamp(); // Immediately update timestamp on active load
             }
         });
 
         // Event listener for submitting the initial store name
         submitInitialStoreBtn.addEventListener('click', () => {
             const storeName = initialStoreNameInput.value.trim();
-            // Allow blank store name if user chooses to skip (or presses Enter on blank)
-            defaultStoreName = storeName;
+            defaultStoreName = storeName; // Can be blank if user just presses Enter
             localStorage.setItem('defaultStoreName', defaultStoreName);
             defaultStoreNameInput.value = defaultStoreName; // Update main UI's store name input
             initialStoreModal.classList.remove('show');
             renderProducts(); // Render products after setting the initial store
+            updateLastActiveTimestamp(); // Update timestamp after initial store selection
         });
 
         // Event listener for the new Skip button
@@ -1204,6 +1231,7 @@
             defaultStoreNameInput.value = defaultStoreName; // Update main UI's store name input
             initialStoreModal.classList.remove('show');
             renderProducts(); // Render products after skipping
+            updateLastActiveTimestamp(); // Update timestamp after skipping initial store
         });
 
         // Allow pressing Enter in the initial store name input to submit or skip
@@ -1271,11 +1299,13 @@
         // --- Modal Logic (Settings) ---
         openSettingsBtn.addEventListener('click', () => {
             settingsModal.classList.add('show');
+            updateLastActiveTimestamp(); // Update timestamp when opening settings
         });
 
         closeSettingsBtn.addEventListener('click', () => {
             settingsModal.classList.remove('show');
             renderProducts();
+            updateLastActiveTimestamp(); // Update timestamp when closing settings
         });
 
         // Close modal if user clicks outside of it
@@ -1283,34 +1313,32 @@
             if (event.target === settingsModal) {
                 settingsModal.classList.remove('show');
                 renderProducts();
+                updateLastActiveTimestamp(); // Update timestamp on modal outside click
             }
         });
 
         // Close modal with Escape key
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') {
-                settingsModal.classList.remove('show');
-                confirmModal.classList.remove('show');
-                updatePriceModal.classList.remove('show');
-                initialStoreModal.classList.remove('show'); // Also hide the initial store modal on escape
-                // Hide any active autocomplete suggestions
-                defaultStoreSuggestions.style.display = 'none';
-                updateStoreSuggestions.style.display = 'none';
-                productSuggestions.style.display = 'none'; // Also hide product suggestions
-                initialStoreSuggestions.style.display = 'none'; // Hide initial store suggestions
-                productToDeleteId = null;
-                productToUpdateIndex = null;
-                // Only re-render if the initial store modal was NOT active,
-                // or if it was active and the user just escaped without setting a store.
-                // If it was active and now hidden, we don't want to renderProducts() here
-                // if a store still needs to be set. The logic in DOMContentLoaded handles this.
+                // If initial store modal is active, pressing Escape should trigger skip
                 if (initialStoreModal.classList.contains('show')) {
-                    // If the initial store modal is still open, and defaultStoreName is still empty,
-                    // we prevent rendering the main app content until a choice is made.
-                    // If Escape was pressed, it means the user implicitly skipped.
-                    skipInitialStoreBtn.click(); // Simulate a skip if modal is active and escape is pressed
-                } else if (defaultStoreName) { // Only render if a store name is available
-                    renderProducts();
+                    skipInitialStoreBtn.click();
+                } else {
+                    settingsModal.classList.remove('show');
+                    confirmModal.classList.remove('show');
+                    updatePriceModal.classList.remove('show');
+                    // Hide any active autocomplete suggestions
+                    defaultStoreSuggestions.style.display = 'none';
+                    updateStoreSuggestions.style.display = 'none';
+                    productSuggestions.style.display = 'none';
+                    initialStoreSuggestions.style.display = 'none';
+                    productToDeleteId = null;
+                    productToUpdateIndex = null;
+                    // Only re-render if a store name is available (or if it was skipped initially)
+                    if (defaultStoreName || !initialStoreModal.classList.contains('show')) {
+                        renderProducts();
+                    }
+                    updateLastActiveTimestamp(); // Update timestamp on Escape
                 }
             }
         });
