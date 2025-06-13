@@ -729,12 +729,7 @@
                                     } else {
                                         initialPriceInput.value = '';
                                     }
-                                    // Also update the default store if the product has a last recorded store
-                                    if (product.priceHistory && product.priceHistory.length > 0 && product.priceHistory[product.priceHistory.length - 1].store) {
-                                        defaultStoreNameInput.value = product.priceHistory[product.priceHistory.length - 1].store;
-                                        defaultStoreName = defaultStoreNameInput.value;
-                                        localStorage.setItem('defaultStoreName', defaultStoreName);
-                                    }
+                                    // Removed the line that updates defaultStoreNameInput for product name selection
                                 }
                             }
                         });
@@ -876,8 +871,10 @@
                             Last Updated: ${latestPriceEntry ? new Date(latestPriceEntry.timestamp).toLocaleString() : 'Never'}
                             ${latestStoreForHeader ? ` at <strong>${latestStoreForHeader}</strong>` : ''}
                         </small>
-                        <button class="btn-secondary check-price-btn mt-2" data-product-id="${product.id}">Update Price</button>
-                        <button class="btn-secondary delete-product-btn delete-btn" data-product-id="${product.id}">Delete</button>
+                        <div class="flex flex-col sm:flex-row gap-2 mt-2"> <!-- New div for buttons -->
+                            <button class="btn-secondary check-price-btn w-full sm:w-auto" data-product-id="${product.id}">Update Price</button>
+                            <button class="btn-secondary delete-product-btn delete-btn w-full sm:w-auto" data-product-id="${product.id}">Delete</button>
+                        </div>
                     </div>
                 `;
                 productListDiv.appendChild(productItem);
@@ -906,12 +903,12 @@
                                 }
                                 console.log(`Setting initialPriceInput.value to: ${initialPriceInput.value}`); // Debugging line
 
-                                // Corrected: selectedProduct -> product
-                                if (product.priceHistory && product.priceHistory.length > 0 && product.priceHistory[product.priceHistory.length - 1].store) {
-                                    defaultStoreNameInput.value = product.priceHistory[product.priceHistory.length - 1].store;
-                                    defaultStoreName = defaultStoreNameInput.value;
-                                    localStorage.setItem('defaultStoreName', defaultStoreName);
-                                }
+                                // Do NOT update defaultStoreNameInput here
+                                // if (product.priceHistory && product.priceHistory.length > 0 && product.priceHistory[product.priceHistory.length - 1].store) {
+                                //     defaultStoreNameInput.value = product.priceHistory[product.priceHistory.length - 1].store;
+                                //     defaultStoreName = defaultStoreNameInput.value;
+                                //     localStorage.setItem('defaultStoreName', defaultStoreName);
+                                // }
                             }
                         }
                     }
