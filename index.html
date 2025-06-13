@@ -396,11 +396,11 @@
 
         /* Responsive adjustments for modal buttons */
         @media (max-width: 480px) {
-            .confirm-buttons, .update-price-buttons {
+            .confirm-buttons, .update-price-buttons, .initial-store-buttons { /* Added initial-store-buttons */
                 flex-direction: column;
                 gap: 1rem;
             }
-            .confirm-buttons .btn, .update-price-buttons .btn {
+            .confirm-buttons .btn, .update-price-buttons .btn, .initial-store-buttons .btn { /* Added initial-store-buttons */
                 width: 100%;
             }
         }
@@ -498,6 +498,25 @@
         <!-- Removed install button as PWA features are disabled in this environment -->
     </div>
 
+    <!-- Initial Store Selection Modal -->
+    <div id="initialStoreModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 class="text-2xl font-semibold text-center mb-4 text-gray-700">Set Current Store</h2>
+            <p class="text-gray-600 mb-4 text-center">Please enter the name of your primary grocery store to get started, or skip for now.</p>
+            <div class="input-group">
+                <label for="initialStoreNameInput">Store Name:</label>
+                <input type="text" id="initialStoreNameInput" placeholder="e.g., Main Supermarket"
+                       class="focus:ring-blue-500 focus:border-blue-500" autocomplete="off">
+                <div id="initialStoreSuggestions" class="autocomplete-suggestions"></div>
+            </div>
+            <div class="initial-store-buttons mt-6 flex justify-center gap-4">
+                <button id="submitInitialStoreBtn" class="btn-primary flex-1">Continue</button>
+                <button id="skipInitialStoreBtn" class="btn-secondary flex-1">Skip</button>
+            </div>
+        </div>
+    </div>
+
+
     <!-- Settings Modal -->
     <div id="settingsModal" class="modal-overlay">
         <div class="modal-content">
@@ -570,6 +589,14 @@
         const openSettingsBtn = document.getElementById('openSettingsBtn');
         const closeSettingsBtn = document.getElementById('closeSettingsBtn');
         const settingsModal = document.getElementById('settingsModal');
+
+        // Initial Store Modal Elements
+        const initialStoreModal = document.getElementById('initialStoreModal');
+        const initialStoreNameInput = document.getElementById('initialStoreNameInput');
+        const initialStoreSuggestions = document.getElementById('initialStoreSuggestions');
+        const submitInitialStoreBtn = document.getElementById('submitInitialStoreBtn');
+        const skipInitialStoreBtn = document.getElementById('skipInitialStoreBtn'); // New Skip button
+
 
         // Confirmation Modal Elements
         const confirmModal = document.getElementById('confirmModal');
@@ -651,7 +678,8 @@
 
         // Load default store name from localStorage on startup
         defaultStoreName = localStorage.getItem('defaultStoreName') || '';
-        defaultStoreNameInput.value = defaultStoreName;
+        defaultStoreNameInput.value = defaultStoreName; // Also update the visible input field
+
 
         // Event listener for the default store input
         defaultStoreNameInput.addEventListener('input', (event) => {
@@ -710,8 +738,8 @@
                             inputElement.value = name;
                             suggestionsContainer.style.display = 'none';
 
-                            // If this is the default store input, update the global defaultStoreName
-                            if (inputElement.id === 'defaultStoreNameInput') {
+                            // If this is the default store input OR initial store input, update the global defaultStoreName
+                            if (inputElement.id === 'defaultStoreNameInput' || inputElement.id === 'initialStoreNameInput') {
                                 defaultStoreName = name;
                                 localStorage.setItem('defaultStoreName', defaultStoreName);
                             }
@@ -729,7 +757,6 @@
                                     } else {
                                         initialPriceInput.value = '';
                                     }
-                                    // Removed the line that updates defaultStoreNameInput for product name selection
                                 }
                             }
                         });
@@ -1145,12 +1172,61 @@
             }
         });
 
-        // Initial render on load
-        renderProducts();
+        // Logic to show initial store modal on app load if defaultStoreName is not set
+        document.addEventListener('DOMContentLoaded', () => {
+            // Re-load defaultStoreName just to be sure it's fresh for initial check
+            defaultStoreName = localStorage.getItem('defaultStoreName') || '';
+            defaultStoreNameInput.value = defaultStoreName; // Keep this updated
+
+            if (!defaultStoreName) {
+                initialStoreModal.classList.add('show');
+                initialStoreNameInput.focus(); // Focus the input field in the modal
+            } else {
+                renderProducts(); // If store is already set, render products normally
+            }
+        });
+
+        // Event listener for submitting the initial store name
+        submitInitialStoreBtn.addEventListener('click', () => {
+            const storeName = initialStoreNameInput.value.trim();
+            // Allow blank store name if user chooses to skip (or presses Enter on blank)
+            defaultStoreName = storeName;
+            localStorage.setItem('defaultStoreName', defaultStoreName);
+            defaultStoreNameInput.value = defaultStoreName; // Update main UI's store name input
+            initialStoreModal.classList.remove('show');
+            renderProducts(); // Render products after setting the initial store
+        });
+
+        // Event listener for the new Skip button
+        skipInitialStoreBtn.addEventListener('click', () => {
+            defaultStoreName = ''; // Set store name to blank
+            localStorage.setItem('defaultStoreName', defaultStoreName);
+            defaultStoreNameInput.value = defaultStoreName; // Update main UI's store name input
+            initialStoreModal.classList.remove('show');
+            renderProducts(); // Render products after skipping
+        });
+
+        // Allow pressing Enter in the initial store name input to submit or skip
+        initialStoreNameInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                // If the input is blank, treat Enter as a skip action
+                if (initialStoreNameInput.value.trim() === '') {
+                    skipInitialStoreBtn.click();
+                } else {
+                    submitInitialStoreBtn.click();
+                }
+            }
+        });
+
+
         // Set up custom autocomplete for all relevant inputs
         setupAutocomplete(productNameInput, productSuggestions, getUniqueProductNames);
         setupAutocomplete(defaultStoreNameInput, defaultStoreSuggestions, getUniqueStoreNames);
         setupAutocomplete(updatePriceModalStoreInput, updateStoreSuggestions, getUniqueStoreNames);
+        // Also set up autocomplete for the new initial store input
+        setupAutocomplete(initialStoreNameInput, initialStoreSuggestions, getUniqueStoreNames);
+
 
         // --- KEYBOARD NAVIGATION LOGIC ---
         defaultStoreNameInput.addEventListener('keydown', (event) => {
@@ -1216,13 +1292,26 @@
                 settingsModal.classList.remove('show');
                 confirmModal.classList.remove('show');
                 updatePriceModal.classList.remove('show');
+                initialStoreModal.classList.remove('show'); // Also hide the initial store modal on escape
                 // Hide any active autocomplete suggestions
                 defaultStoreSuggestions.style.display = 'none';
                 updateStoreSuggestions.style.display = 'none';
                 productSuggestions.style.display = 'none'; // Also hide product suggestions
+                initialStoreSuggestions.style.display = 'none'; // Hide initial store suggestions
                 productToDeleteId = null;
                 productToUpdateIndex = null;
-                renderProducts();
+                // Only re-render if the initial store modal was NOT active,
+                // or if it was active and the user just escaped without setting a store.
+                // If it was active and now hidden, we don't want to renderProducts() here
+                // if a store still needs to be set. The logic in DOMContentLoaded handles this.
+                if (initialStoreModal.classList.contains('show')) {
+                    // If the initial store modal is still open, and defaultStoreName is still empty,
+                    // we prevent rendering the main app content until a choice is made.
+                    // If Escape was pressed, it means the user implicitly skipped.
+                    skipInitialStoreBtn.click(); // Simulate a skip if modal is active and escape is pressed
+                } else if (defaultStoreName) { // Only render if a store name is available
+                    renderProducts();
+                }
             }
         });
     </script>
